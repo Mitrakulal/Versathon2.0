@@ -9,7 +9,7 @@ import QuizResultsPage from './QuizResultsPage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 export default function QuizPage() {
-  const { currentSpace, navigate, showToast } = useApp();
+  const { currentSpace, navigate, showToast, route } = useApp();
   const [topics, setTopics] = useState([]);
   const [questionCount, setQuestionCount] = useState(null);
   const [loadingTopics, setLoadingTopics] = useState(true);
@@ -116,6 +116,7 @@ export default function QuizPage() {
       loading={startingQuiz}
       availableQuestionsCount={questionCount}
       onGoToQuestions={() => navigate('questions', currentSpace?.id)}
+      initialTopicId={route?.params?.get('topic_id')}
     />
   );
 }

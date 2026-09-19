@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PieChart, Sparkles, CheckCircle2, RefreshCw } from 'lucide-react';
+import { PieChart, Sparkles, CheckCircle2, RefreshCw, BarChart3, LayoutGrid } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { dashboardService } from '../services/dashboardService';
 import StatsOverview from '../components/dashboard/StatsOverview';
@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const { currentSpace, navigate } = useApp();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'heatmap'
 
   const fetchDashboard = useCallback(async () => {
     if (!currentSpace) return;
@@ -32,7 +33,11 @@ export default function DashboardPage() {
   }, [fetchDashboard]);
 
   const handleStartFocusedQuiz = (topicId) => {
-    navigate('quiz', currentSpace?.id);
+    navigate('quiz', currentSpace?.id, { topic_id: topicId });
+  };
+
+  const handleReviewDue = () => {
+    navigate('flashcards', currentSpace?.id);
   };
 
   if (loading && !dashboard) {
@@ -40,7 +45,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: '1080px', margin: '0 auto', paddingBottom: '3rem' }}>
       {/* Header Banner */}
       <div className="glass-card" style={{ marginBottom: '2rem', padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
@@ -80,19 +85,86 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Stats Overview */}
-      <StatsOverview dashboard={dashboard} />
+      <StatsOverview dashboard={dashboard} onReviewDue={handleReviewDue} />
 
-      {/* Revise Next Recommendations */}
+      {/* Revise Next Priority Recommendations */}
       <ReviseNextCard
         recommendations={dashboard?.revise_next}
         onStartFocusedQuiz={handleStartFocusedQuiz}
       />
 
-      {/* Topic Mastery Heatmap */}
-      <MasteryHeatmap topics={dashboard?.topics} />
+      {/* View Switcher & Topic Mastery Container */}
+      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.2rem' }}>
+            Topic Performance Breakdown
+          </h2>
+          <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
+            Choose your preferred analytics view.
+          </p>
+        </div>
 
-      {/* Categorized Topic List */}
-      <TopicMasteryList topics={dashboard?.topics} />
+        {/* View Mode Toggle */}
+        <div style={{ display: 'flex', gap: '0.3rem', background: '#e2e8f0', padding: '0.25rem', borderRadius: 'var(--radius-full)' }}>
+          <button
+            type="button"
+            onClick={() => setViewMode('list')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.35rem 0.9rem',
+              borderRadius: 'var(--radius-full)',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              border: 'none',
+              background: viewMode === 'list' ? '#ffffff' : 'transparent',
+              color: viewMode === 'list' ? '#0f172a' : '#64748b',
+              boxShadow: viewMode === 'list' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
+            <BarChart3 size={14} />
+            <span>Progress Bars</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('heatmap')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.35rem 0.9rem',
+              borderRadius: 'var(--radius-full)',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              border: 'none',
+              background: viewMode === 'heatmap' ? '#ffffff' : 'transparent',
+              color: viewMode === 'heatmap' ? '#0f172a' : '#64748b',
+              boxShadow: viewMode === 'heatmap' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
+            <LayoutGrid size={14} />
+            <span>Heatmap Grid</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Render Selected View */}
+      {viewMode === 'list' ? (
+        <TopicMasteryList
+          topics={dashboard?.topics}
+          onPracticeTopic={handleStartFocusedQuiz}
+        />
+      ) : (
+        <MasteryHeatmap
+          topics={dashboard?.topics}
+          onPracticeTopic={handleStartFocusedQuiz}
+        />
+      )}
     </div>
   );
 }

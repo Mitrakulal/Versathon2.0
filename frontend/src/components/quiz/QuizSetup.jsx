@@ -9,10 +9,11 @@ export default function QuizSetup({
   loading,
   availableQuestionsCount,
   onGoToQuestions,
+  initialTopicId,
 }) {
-  const [mode, setMode] = useState('adaptive');
+  const [mode, setMode] = useState(initialTopicId ? 'topic_quiz' : 'adaptive');
   const [questionCount, setQuestionCount] = useState(5);
-  const [selectedTopics, setSelectedTopics] = useState([]);
+  const [selectedTopics, setSelectedTopics] = useState(initialTopicId ? [initialTopicId] : []);
 
   const modes = [
     {

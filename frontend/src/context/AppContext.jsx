@@ -13,18 +13,20 @@ export function AppProvider({ children }) {
   // Parse hash to route
   const parseHash = () => {
     const hash = window.location.hash.replace(/^#\/?/, '');
-    const parts = hash.split('/');
+    const [pathPart, queryPart] = hash.split('?');
+    const parts = (pathPart || '').split('/');
+    const params = new URLSearchParams(queryPart || '');
     
     if (!parts[0] || parts[0] === 'spaces') {
       if (parts[1] && parts[1] !== 'new') {
         const spaceId = parts[1];
         const subPage = parts[2] || 'overview';
-        return { page: subPage, spaceId };
+        return { page: subPage, spaceId, params };
       }
-      return { page: 'spaces', spaceId: null };
+      return { page: 'spaces', spaceId: null, params };
     }
 
-    return { page: 'spaces', spaceId: null };
+    return { page: 'spaces', spaceId: null, params };
   };
 
   const [route, setRoute] = useState(parseHash);
@@ -72,14 +74,15 @@ export function AppProvider({ children }) {
   }, [route.spaceId, spaces, currentSpace]);
 
   // Navigation function
-  const navigate = (page, spaceId = null) => {
+  const navigate = (page, spaceId = null, extraParams = null) => {
     const targetSpaceId = spaceId || currentSpace?.id;
+    const queryStr = extraParams ? `?${new URLSearchParams(extraParams).toString()}` : '';
     if (page === 'spaces') {
-      window.location.hash = '/spaces';
+      window.location.hash = `/spaces${queryStr}`;
     } else if (targetSpaceId) {
-      window.location.hash = `/spaces/${targetSpaceId}/${page}`;
+      window.location.hash = `/spaces/${targetSpaceId}/${page}${queryStr}`;
     } else {
-      window.location.hash = '/spaces';
+      window.location.hash = `/spaces${queryStr}`;
     }
   };
 
