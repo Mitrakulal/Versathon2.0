@@ -1,0 +1,69 @@
+import json
+import logging
+from typing import Any, Dict, List, Optional
+from openai import OpenAI
+from app.core.config import settings
+
+logger = logging.getLogger("noterecall.llm")
+
+
+class LLMClient:
+    """Wrapper around OpenAI-compatible API (NVIDIA, Gemini, OpenAI, etc.)."""
+
+    def __init__(self):
+        self.client = OpenAI(
+            base_url=settings.LLM_BASE_URL,
+            api_key=settings.LLM_API_KEY or "dummy_key",
+        )
+        self.model = settings.LLM_MODEL
+        self.temperature = settings.LLM_TEMPERATURE
+        self.max_tokens = settings.LLM_MAX_TOKENS
+
+    def generate_text(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+    ) -> str:
+        """Standard chat completion call."""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=temperature if temperature is not None else self.temperature,
+                max_tokens=max_tokens if max_tokens is not None else self.max_tokens,
+                stream=False,
+            )
+            content = response.choices[0].message.content
+            return content.strip() if content else ""
+        except Exception as e:
+            logger.error(f"Error during LLM text generation: {e}")
+            raise e
+
+    def generate_json(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: Optional[float] = None,
+    ) -> Any:
+        """Generates structured JSON output from the model."""
+        raw_text = self.generate_text(messages, temperature=temperature or 0.1)
+
+        # Handle markdown code blocks if the model wrapped output in ```json ... ```
+        cleaned_text = raw_text.strip()
+        if cleaned_text.startswith("```"):
+            lines = cleaned_text.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            cleaned_text = "\n".join(lines).strip()
+
+        try:
+            return json.loads(cleaned_text)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON response from LLM. Raw output:\n{raw_text}")
+            raise ValueError(f"LLM returned invalid JSON: {e}")
+
+
+# Singleton instance
+llm_client = LLMClient()

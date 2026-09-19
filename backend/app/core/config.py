@@ -1,5 +1,4 @@
-from typing import List, Union
-from pydantic import AnyHttpUrl, field_validator
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,24 +19,16 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite:///./data/noterecall.db"
 
-    # Vector Store
-    VECTOR_STORE_TYPE: str = "chroma"
-    VECTOR_STORE_PATH: str = "./data/chroma_db"
-    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
-
-    # LLM Provider
-    LLM_PROVIDER: str = "openai"
+    # LLM Settings (NVIDIA API / OpenAI compatible)
+    LLM_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
     LLM_API_KEY: str = ""
-    LLM_BASE_URL: str = "https://api.openai.com/v1"
-    LLM_MODEL: str = "gpt-4o-mini"
-    LLM_TEMPERATURE: float = 0.2
+    LLM_MODEL: str = "z-ai/glm-5.3-flash"
+    LLM_TEMPERATURE: float = 0.3
+    LLM_MAX_TOKENS: int = 2048
 
-    # SM-2 Spaced Repetition Parameters
+    # Spaced Repetition (SM-2 Defaults)
     SM2_DEFAULT_EASE_FACTOR: float = 2.5
     SM2_MIN_EASE_FACTOR: float = 1.3
-
-    # Worker Settings
-    ASYNC_WORKER_CONCURRENCY: int = 2
 
     model_config = SettingsConfigDict(
         env_file=".env",
