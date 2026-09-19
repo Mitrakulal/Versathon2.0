@@ -48,10 +48,21 @@ To verify that the frontend and backend can talk to each other on the same machi
 
 ---
 
-## 🌿 Git & Commit Discipline
+## 🌿 Git & Commit Discipline (Mandatory for FE & BE)
 
-- Commit often with clear semantic prefixes:
+> [!IMPORTANT]
+> **Commit and Push After Every Feature / Phase:**
+> Whenever you or your agent completes a feature, endpoint, or component, run:
+> ```bash
+> git add .
+> git commit -m "<type>(<scope>): descriptive message"
+> git push origin main  # or working branch
+> ```
+> This guarantees neither developer falls out of sync or runs into massive merge conflicts later.
+
+- Use clear semantic prefixes:
   - `feat(backend): implement topic extraction endpoint`
   - `feat(frontend): build topic outline tree component`
   - `docs: update API contracts for quiz answer submission`
-- Always pull the latest `docs/` before starting a new feature branch or task.
+- Always pull before starting the next phase.
+
