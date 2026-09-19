@@ -69,7 +69,16 @@ def upload_document(
             db.refresh(chunk)
 
         # 4. Extract Topic Hierarchy & Tag Chunks
-        TopicExtractor.extract_topics_from_text(db_chunks, space_id=space_id, db=db)
+        created_topics = TopicExtractor.extract_topics_from_text(db_chunks, space_id=space_id, db=db)
+
+        # 5. Auto-generate initial question bank for extracted subtopics
+        from app.services.generation.generator import QuestionGenerator
+        subtopics = [t for t in created_topics if t.parent_id is not None]
+        for st in subtopics[:3]:
+            try:
+                QuestionGenerator.generate_for_topic(st.id, db=db, count=2)
+            except Exception as q_err:
+                logger.warning(f"Initial question generation skipped for {st.name}: {q_err}")
 
         # Update doc status
         doc.status = "completed"
