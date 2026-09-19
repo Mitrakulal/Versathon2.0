@@ -76,12 +76,13 @@ Output MUST be strictly valid JSON conforming to this exact schema:
         # Persist extracted topics and assign chunks
         created_topics = []
         try:
+            existing_count = db.query(Topic).filter(Topic.space_id == space_id, Topic.parent_id.is_(None)).count()
             for t_idx, topic_data in enumerate(extracted_data.get("topics", [])):
                 parent_topic = Topic(
                     space_id=space_id,
-                    name=topic_data.get("name", f"Topic {t_idx + 1}"),
+                    name=topic_data.get("name", f"Topic {existing_count + t_idx + 1}"),
                     summary=topic_data.get("summary", ""),
-                    order_index=t_idx,
+                    order_index=existing_count + t_idx,
                 )
                 db.add(parent_topic)
                 db.flush()  # to generate parent_topic.id

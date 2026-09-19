@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -46,9 +46,22 @@ def update_topic(
     db.commit()
     db.refresh(topic)
 
-    # Return tree or node
+    # Return actual node with accurate rolled-up counts
     tree = TopicManager.get_topic_tree(space_id=topic.space_id, db=db)
-    # Find this specific node from tree or return standard node
+    
+    def find_node(nodes: List[TopicNodeResponse]) -> Optional[TopicNodeResponse]:
+        for n in nodes:
+            if n.id == topic.id:
+                return n
+            found = find_node(n.subtopics)
+            if found:
+                return found
+        return None
+
+    matched_node = find_node(tree)
+    if matched_node:
+        return matched_node
+
     return TopicNodeResponse(
         id=topic.id,
         space_id=topic.space_id,
