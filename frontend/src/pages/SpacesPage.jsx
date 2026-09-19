@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Plus, Search, FolderGit2, BookOpen, Layers, CheckCircle2, Sparkles, Clock, Star, Award, ArrowRight } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  FolderGit2,
+  BookOpen,
+  Layers,
+  CheckCircle2,
+  HelpCircle,
+  Clock,
+  Award,
+  ArrowRight,
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import SpaceCard from '../components/upload/SpaceCard';
 import EmptyState from '../components/common/EmptyState';
@@ -17,6 +28,11 @@ export default function SpacesPage({ onOpenCreateSpace }) {
 
   const totalDocs = spaces.reduce((sum, s) => sum + (s.document_count || 0), 0);
   const totalTopics = spaces.reduce((sum, s) => sum + (s.topic_count || 0), 0);
+  const totalQuestions = spaces.reduce((sum, s) => sum + (s.question_count || 0), 0);
+
+  // Find the most populated space for quick-start practice
+  const activePracticeSpace =
+    [...spaces].sort((a, b) => (b.question_count || 0) - (a.question_count || 0))[0] || spaces[0];
 
   if (loadingSpaces) {
     return <LoadingSpinner text="Loading your study spaces..." />;
@@ -24,19 +40,27 @@ export default function SpacesPage({ onOpenCreateSpace }) {
 
   return (
     <div>
-      {/* Welcome Blue Card (Exact style from Studdy reference) */}
+      {/* Welcome Banner */}
       <div className="welcome-banner">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', position: 'relative', zIndex: 2 }}>
           <div style={{ maxWidth: '640px' }}>
             <h1 style={{ fontSize: '1.95rem', fontWeight: 700, marginBottom: '0.65rem' }}>
-              Welcome back, Learner! 👋
+              Welcome to NoteRecall! 🧠
             </h1>
-            <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.95, marginBottom: '1.25rem' }}>
-              You've mastered <strong style={{ textDecoration: 'underline' }}>70%</strong> of your active recall targets this week! Keep it up to reinforce memory retention.
+            <p style={{ fontSize: '0.96rem', lineHeight: 1.55, opacity: 0.95, marginBottom: '1.35rem' }}>
+              {spaces.length > 0 ? (
+                <>
+                  You have <strong style={{ textDecoration: 'underline' }}>{totalQuestions} active recall questions</strong> and{' '}
+                  <strong>{totalTopics} topics</strong> ready across {spaces.length} course spaces.
+                </>
+              ) : (
+                'Upload your lecture slides, PDFs, or notes to automatically generate grounded practice questions and flashcards.'
+              )}
             </p>
 
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
+                type="button"
                 onClick={onOpenCreateSpace}
                 style={{
                   background: '#ffffff',
@@ -57,9 +81,10 @@ export default function SpacesPage({ onOpenCreateSpace }) {
                 <span>Create New Space</span>
               </button>
 
-              {spaces.length > 0 && (
+              {activePracticeSpace && (
                 <button
-                  onClick={() => navigate('quiz', spaces[0].id)}
+                  type="button"
+                  onClick={() => navigate('quiz', activePracticeSpace.id)}
                   style={{
                     background: 'rgba(255, 255, 255, 0.2)',
                     color: '#ffffff',
@@ -75,13 +100,13 @@ export default function SpacesPage({ onOpenCreateSpace }) {
                   }}
                 >
                   <CheckCircle2 size={16} />
-                  <span>Start Daily Revision</span>
+                  <span>Practice ({activePracticeSpace.title})</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Decorative Learning Illustration / Badge */}
+          {/* Learning Illustration Badge */}
           <div
             style={{
               width: '96px',
@@ -101,76 +126,66 @@ export default function SpacesPage({ onOpenCreateSpace }) {
         </div>
       </div>
 
-      {/* Top 3 KPI Cards (Matching Studdy Reference Header Cards) */}
+      {/* Top Real Metrics Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-        {/* Card 1: Attendance / Streak */}
+        {/* Card 1: Ingested Lecture Materials */}
         <div className="stat-card">
           <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', marginBottom: '0.75rem' }}>
-              Study Consistency
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '0.75rem' }}>
+              Lecture Materials
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
-                <Clock size={17} />
+                <BookOpen size={17} />
               </div>
               <span style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a' }}>
-                19/20
+                {totalDocs}
               </span>
             </div>
           </div>
           <p style={{ fontSize: '0.78rem', color: '#64748b' }}>
-            Well done! You're attending all active recall sessions this month.
+            Documents and transcripts uploaded across your spaces.
           </p>
         </div>
 
-        {/* Card 2: Questions Solved */}
+        {/* Card 2: Generated Question Bank */}
         <div className="stat-card">
           <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', marginBottom: '0.75rem' }}>
-              Questions Solved
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '0.75rem' }}>
+              Practice Question Bank
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
-                <CheckCircle2 size={17} />
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                <HelpCircle size={17} />
               </div>
               <span style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a' }}>
-                53/56
+                {totalQuestions}
               </span>
             </div>
           </div>
           <p style={{ fontSize: '0.78rem', color: '#64748b' }}>
-            Don't forget about your next scheduled SM-2 flashcard review.
+            Grounded recall questions extracted across {totalTopics} topics.
           </p>
         </div>
 
-        {/* Card 3: Retention Rating */}
+        {/* Card 3: Study Spaces Active */}
         <div className="stat-card">
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
-                <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569' }}>Retention Rating</span>
-                <span style={{ background: '#2563eb', color: '#ffffff', fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: 'var(--radius-full)' }}>
-                  AI powered ✨
-                </span>
+          <div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '0.75rem' }}>
+              Active Course Notebooks
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#fffbeb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}>
+                <Layers size={17} />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
-                  <Star size={17} />
-                </div>
-                <span style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a' }}>
-                  89/100
-                </span>
-              </div>
+              <span style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a' }}>
+                {spaces.length}
+              </span>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
-            <span
-              style={{ color: '#2563eb', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}
-              onClick={() => spaces[0] && navigate('dashboard', spaces[0].id)}
-            >
-              Go to report →
-            </span>
-          </div>
+          <p style={{ fontSize: '0.78rem', color: '#64748b' }}>
+            Individual study spaces organized with notes and flashcards.
+          </p>
         </div>
       </div>
 

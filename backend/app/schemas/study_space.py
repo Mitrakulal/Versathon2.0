@@ -23,5 +23,6 @@ class StudySpaceResponse(StudySpaceBase):
     created_at: datetime
     document_count: int = 0
     topic_count: int = 0
+    question_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)

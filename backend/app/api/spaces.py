@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.db.session import get_db
-from app.models.entities import StudySpace, Document, Topic
+from app.models.entities import StudySpace, Document, Topic, Question
 from app.schemas.study_space import StudySpaceCreate, StudySpaceUpdate, StudySpaceResponse
 from app.core.exceptions import ResourceNotFoundException
 
@@ -16,13 +16,20 @@ def list_study_spaces(
     db: Session = Depends(get_db),
     user_id: str = "default-user",
 ):
-    """Retrieve all study spaces for the current user with document & topic counts."""
+    """Retrieve all study spaces for the current user with document, topic, and question counts."""
     spaces = db.query(StudySpace).filter(StudySpace.user_id == user_id).order_by(StudySpace.created_at.desc()).all()
 
     result = []
     for space in spaces:
         doc_count = db.query(func.count(Document.id)).filter(Document.space_id == space.id).scalar() or 0
         top_count = db.query(func.count(Topic.id)).filter(Topic.space_id == space.id).scalar() or 0
+        q_count = (
+            db.query(func.count(Question.id))
+            .join(Topic, Question.topic_id == Topic.id)
+            .filter(Topic.space_id == space.id)
+            .scalar()
+            or 0
+        )
         
         result.append(
             StudySpaceResponse(
@@ -33,6 +40,7 @@ def list_study_spaces(
                 created_at=space.created_at,
                 document_count=doc_count,
                 topic_count=top_count,
+                question_count=q_count,
             )
         )
     return result
@@ -82,6 +90,13 @@ def get_study_space(
 
     doc_count = db.query(func.count(Document.id)).filter(Document.space_id == space.id).scalar() or 0
     top_count = db.query(func.count(Topic.id)).filter(Topic.space_id == space.id).scalar() or 0
+    q_count = (
+        db.query(func.count(Question.id))
+        .join(Topic, Question.topic_id == Topic.id)
+        .filter(Topic.space_id == space.id)
+        .scalar()
+        or 0
+    )
 
     return StudySpaceResponse(
         id=space.id,
@@ -91,6 +106,7 @@ def get_study_space(
         created_at=space.created_at,
         document_count=doc_count,
         topic_count=top_count,
+        question_count=q_count,
     )
 
 

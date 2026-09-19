@@ -75,15 +75,34 @@ export default function SpaceCard({ space }) {
 
       <div>
         {/* Stats Row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          <span className="badge badge-primary" style={{ gap: '0.35rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+          <span className="badge badge-primary" style={{ gap: '0.3rem', fontSize: '0.74rem' }}>
             <BookOpen size={12} />
-            <span>{space.document_count || 0} Documents</span>
+            <span>{space.document_count || 0} Docs</span>
           </span>
-          <span className="badge badge-neutral" style={{ gap: '0.35rem' }}>
+          <span className="badge badge-neutral" style={{ gap: '0.3rem', fontSize: '0.74rem' }}>
             <Layers size={12} color="#0284c7" />
             <span>{space.topic_count || 0} Topics</span>
           </span>
+          {(space.question_count || 0) > 0 && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                color: '#059669',
+                background: '#ecfdf5',
+                border: '1px solid #a7f3d0',
+                padding: '0.15rem 0.55rem',
+                borderRadius: 'var(--radius-full)',
+              }}
+            >
+              <HelpCircle size={12} />
+              <span>{space.question_count} Questions</span>
+            </span>
+          )}
         </div>
 
         {/* Action Row */}
