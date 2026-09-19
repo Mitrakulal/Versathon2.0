@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, Shuffle, Calendar, Target, Play } from 'lucide-react';
+import { Sparkles, CheckCircle2, Shuffle, Calendar, Target, Play, AlertCircle, PlusCircle } from 'lucide-react';
 import Button from '../common/Button';
 
-export default function QuizSetup({ space, topics, onStartQuiz, loading }) {
+export default function QuizSetup({
+  space,
+  topics,
+  onStartQuiz,
+  loading,
+  availableQuestionsCount,
+  onGoToQuestions,
+}) {
   const [mode, setMode] = useState('adaptive');
   const [questionCount, setQuestionCount] = useState(5);
   const [selectedTopics, setSelectedTopics] = useState([]);
@@ -54,6 +61,8 @@ export default function QuizSetup({ space, topics, onStartQuiz, loading }) {
     });
   };
 
+  const isBankEmpty = availableQuestionsCount === 0;
+
   return (
     <div className="glass-card" style={{ maxWidth: '780px', margin: '0 auto', padding: '2.5rem', borderRadius: 'var(--radius-xl)' }}>
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -62,8 +71,69 @@ export default function QuizSetup({ space, topics, onStartQuiz, loading }) {
         </h2>
         <p style={{ color: '#64748b', fontSize: '0.95rem' }}>
           Choose your practice mode and question volume for "{space.title}"
+          {availableQuestionsCount !== undefined && availableQuestionsCount !== null && (
+            <span style={{ fontWeight: 600, color: '#2563eb', marginLeft: '0.35rem' }}>
+              ({availableQuestionsCount} questions in bank)
+            </span>
+          )}
         </p>
       </div>
+
+      {/* Empty Question Bank Guard */}
+      {isBankEmpty && (
+        <div
+          style={{
+            padding: '1.25rem 1.5rem',
+            background: '#fffbeb',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid #fde68a',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '50%',
+                background: '#fef3c7',
+                color: '#d97706',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <AlertCircle size={20} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, color: '#92400e', fontSize: '0.95rem' }}>
+                No Questions in Bank Yet
+              </div>
+              <div style={{ fontSize: '0.84rem', color: '#b45309' }}>
+                Generate practice questions from your notes first before starting a session.
+              </div>
+            </div>
+          </div>
+
+          {onGoToQuestions && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={PlusCircle}
+              onClick={onGoToQuestions}
+              style={{ borderRadius: 'var(--radius-full)', background: '#ffffff' }}
+            >
+              Go to Question Bank
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Mode Picker */}
       <div style={{ marginBottom: '2rem' }}>
@@ -183,6 +253,7 @@ export default function QuizSetup({ space, topics, onStartQuiz, loading }) {
           icon={Play}
           onClick={handleLaunch}
           loading={loading}
+          disabled={isBankEmpty}
           style={{ width: '100%', maxWidth: '320px', padding: '0.9rem 2rem', borderRadius: 'var(--radius-full)' }}
           id="launch-quiz-btn"
         >

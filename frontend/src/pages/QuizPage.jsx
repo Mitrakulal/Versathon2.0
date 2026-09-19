@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { quizService } from '../services/quizService';
 import { topicsService } from '../services/topicsService';
+import { questionsService } from '../services/questionsService';
 import QuizSetup from '../components/quiz/QuizSetup';
 import QuizRunner from '../components/quiz/QuizRunner';
 import QuizResultsPage from './QuizResultsPage';
@@ -10,6 +11,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 export default function QuizPage() {
   const { currentSpace, navigate, showToast } = useApp();
   const [topics, setTopics] = useState([]);
+  const [questionCount, setQuestionCount] = useState(null);
   const [loadingTopics, setLoadingTopics] = useState(true);
   const [activeSession, setActiveSession] = useState(null);
   const [quizSummary, setQuizSummary] = useState(null);
@@ -17,18 +19,22 @@ export default function QuizPage() {
 
   useEffect(() => {
     if (!currentSpace) return;
-    const loadTopics = async () => {
+    const loadData = async () => {
       try {
         setLoadingTopics(true);
-        const data = await topicsService.getTopicTree(currentSpace.id);
-        setTopics(data || []);
+        const [topicsData, questionsData] = await Promise.all([
+          topicsService.getTopicTree(currentSpace.id),
+          questionsService.listQuestions(currentSpace.id).catch(() => []),
+        ]);
+        setTopics(topicsData || []);
+        setQuestionCount(Array.isArray(questionsData) ? questionsData.length : 0);
       } catch (err) {
-        console.error('Failed to load topics', err);
+        console.error('Failed to load quiz initial data', err);
       } finally {
         setLoadingTopics(false);
       }
     };
-    loadTopics();
+    loadData();
   }, [currentSpace]);
 
   const handleStartQuiz = async (payload) => {
@@ -66,8 +72,14 @@ export default function QuizPage() {
     setQuizSummary(null);
   };
 
+  const handleExitQuiz = () => {
+    setActiveSession(null);
+    setQuizSummary(null);
+    showToast('Practice session cancelled.', 'info');
+  };
+
   if (loadingTopics) {
-    return <LoadingSpinner text="Preparing quiz generator and topics..." />;
+    return <LoadingSpinner text="Preparing practice session and topics..." />;
   }
 
   // 1. If summary exists, display Results
@@ -87,8 +99,10 @@ export default function QuizPage() {
     return (
       <QuizRunner
         session={activeSession}
+        topics={topics}
         onSubmitAnswer={handleSubmitAnswer}
         onCompleteQuiz={handleCompleteQuiz}
+        onExitQuiz={handleExitQuiz}
       />
     );
   }
@@ -100,6 +114,8 @@ export default function QuizPage() {
       topics={topics}
       onStartQuiz={handleStartQuiz}
       loading={startingQuiz}
+      availableQuestionsCount={questionCount}
+      onGoToQuestions={() => navigate('questions', currentSpace?.id)}
     />
   );
 }

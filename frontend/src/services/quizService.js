@@ -88,4 +88,32 @@ export const quizService = {
       method: 'POST',
     }, mockSummary);
   },
+
+  /**
+   * Fetch attempt-by-attempt review data with verified answers & note excerpts
+   */
+  async getQuizResults(sessionId) {
+    const mockResults = {
+      session_id: sessionId,
+      score: 80.0,
+      completed_at: new Date().toISOString(),
+      attempts: MOCK_QUESTIONS.slice(0, 5).map((q, idx) => ({
+        question_id: q.id,
+        prompt: q.prompt,
+        type: q.type,
+        student_response: idx === 1 ? 'Incorrect guess' : q.answer,
+        correct_answer: q.answer,
+        correctness: idx === 1 ? 'incorrect' : 'correct',
+        score: idx === 1 ? 0.0 : 1.0,
+        time_taken_seconds: 14 + idx * 3,
+        explanation: q.explanation,
+        source_passage: q.source_passage || 'Notes excerpt from lecture slides.',
+        feedback: idx === 1 ? 'Missed the key definition from notes.' : 'Spot on answer!',
+      })),
+    };
+
+    return apiRequest(`/quiz/${sessionId}/results`, {
+      method: 'GET',
+    }, mockResults);
+  },
 };
