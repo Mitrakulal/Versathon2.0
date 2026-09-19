@@ -23,8 +23,8 @@ class LLMClient:
         return OpenAI(
             base_url=self.base_url,
             api_key=self.api_key,
-            timeout=4.0,
-            max_retries=0,
+            timeout=15.0,
+            max_retries=1,
         )
 
     def generate_text(
@@ -58,13 +58,21 @@ class LLMClient:
         raw_text = self.generate_text(messages, temperature=temperature or 0.1)
 
         cleaned_text = raw_text.strip()
-        if cleaned_text.startswith("```"):
-            lines = cleaned_text.splitlines()
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].startswith("```"):
-                lines = lines[:-1]
-            cleaned_text = "\n".join(lines).strip()
+        
+        # 1. Try all markdown code blocks for valid JSON
+        import re
+        for block in re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", raw_text):
+            try:
+                return json.loads(block.strip())
+            except Exception:
+                continue
+
+        # 2. Try extracting JSON objects {...} or arrays [...]
+        for match in re.finditer(r"(\{[\s\S]*\}|\[[\s\S]*\])", raw_text):
+            try:
+                return json.loads(match.group(0).strip())
+            except Exception:
+                continue
 
         try:
             return json.loads(cleaned_text)

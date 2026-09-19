@@ -99,8 +99,8 @@ class Question(Base):
     is_flagged = Column(Boolean, default=False)
 
     topic = relationship("Topic", back_populates="questions")
-    attempts = relationship("Attempt", back_populates="question")
-    review_states = relationship("ReviewState", back_populates="question")
+    attempts = relationship("Attempt", back_populates="question", cascade="all, delete-orphan")
+    review_states = relationship("ReviewState", back_populates="question", cascade="all, delete-orphan")
 
 
 class QuizSession(Base):
