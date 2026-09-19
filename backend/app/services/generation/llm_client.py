@@ -11,13 +11,21 @@ class LLMClient:
     """Wrapper around OpenAI-compatible API (NVIDIA, Gemini, OpenAI, etc.)."""
 
     def __init__(self):
-        self.client = OpenAI(
-            base_url=settings.LLM_BASE_URL,
-            api_key=settings.LLM_API_KEY or "dummy_key",
-        )
+        self.base_url = settings.LLM_BASE_URL
+        self.api_key = settings.LLM_API_KEY
         self.model = settings.LLM_MODEL
         self.temperature = settings.LLM_TEMPERATURE
         self.max_tokens = settings.LLM_MAX_TOKENS
+
+    def _get_client(self) -> OpenAI:
+        if not self.api_key or "your_nvidia_api_key_here" in self.api_key or len(self.api_key.strip()) < 8:
+            raise ValueError("NVIDIA LLM API key not configured in .env")
+        return OpenAI(
+            base_url=self.base_url,
+            api_key=self.api_key,
+            timeout=8.0,
+            max_retries=0,
+        )
 
     def generate_text(
         self,
@@ -27,7 +35,8 @@ class LLMClient:
     ) -> str:
         """Standard chat completion call."""
         try:
-            response = self.client.chat.completions.create(
+            client = self._get_client()
+            response = client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=temperature if temperature is not None else self.temperature,
@@ -48,7 +57,6 @@ class LLMClient:
         """Generates structured JSON output from the model."""
         raw_text = self.generate_text(messages, temperature=temperature or 0.1)
 
-        # Handle markdown code blocks if the model wrapped output in ```json ... ```
         cleaned_text = raw_text.strip()
         if cleaned_text.startswith("```"):
             lines = cleaned_text.splitlines()
