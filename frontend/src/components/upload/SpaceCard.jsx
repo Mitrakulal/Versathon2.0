@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Layers, CheckCircle2, Trash2, ArrowRight } from 'lucide-react';
+import { BookOpen, Layers, CheckCircle2, Trash2, ArrowRight, HelpCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { spacesService } from '../../services/spacesService';
 import Button from '../common/Button';
