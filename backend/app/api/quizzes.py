@@ -17,6 +17,7 @@ from app.schemas.quiz import (
 )
 from app.services.quiz.adaptive import AdaptiveSampler
 from app.services.quiz.evaluator import AnswerEvaluator
+from app.services.mastery.calculator import compute_topic_masteries
 from app.core.exceptions import ResourceNotFoundException, ProcessingFailedException
 
 router = APIRouter(tags=["Quizzes"])
@@ -158,6 +159,12 @@ def complete_quiz(
     session.score = round(percentage_score, 1)
     session.completed_at = datetime.now(timezone.utc)
     db.commit()
+
+    # Automatically refresh and persist TopicMastery records
+    try:
+        compute_topic_masteries(db, session.space_id, user_id)
+    except Exception:
+        pass
 
     # Calculate per-topic breakdown
     topic_scores: Dict[str, Dict[str, Any]] = {}

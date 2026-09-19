@@ -5,6 +5,7 @@ from app.api.topics import router as topics_router
 from app.api.questions import router as questions_router
 from app.api.quizzes import router as quizzes_router
 from app.api.flashcards import router as flashcards_router
+from app.api.mastery import router as mastery_router
 
 api_router = APIRouter()
 
@@ -15,3 +16,4 @@ api_router.include_router(topics_router)
 api_router.include_router(questions_router)
 api_router.include_router(quizzes_router)
 api_router.include_router(flashcards_router)
+api_router.include_router(mastery_router)
