@@ -34,6 +34,13 @@ Versathon2.0/
 │   │   └── main.jsx
 │   └── package.json
 │
+├── docs/                     # Shared documentation & API contracts
+│   ├── API_CONTRACTS.md      # Single source of truth for REST endpoints
+│   ├── DATA_MODELS.md        # Shared TypeScript & Python interfaces
+│   ├── FRONTEND_BACKEND_SYNC.md # Rules of engagement for parallel vibe coding
+│   ├── ARCHITECTURE.md       # Ports, local proxy & system flow
+│   └── PROBLEM_STATEMENT.md  # Original solution requirements
+│
 └── .env.example              # Environment variables template
 ```
 
