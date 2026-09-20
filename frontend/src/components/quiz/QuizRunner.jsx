@@ -42,6 +42,21 @@ export default function QuizRunner({
   const totalQuestions = session.questions.length;
   const progressPercent = ((currentIndex + 1) / totalQuestions) * 100;
 
+  // Determine whether this question has multiple choice options or requires text response
+  const hasOptions = Boolean(
+    currentQuestion?.options &&
+    Array.isArray(currentQuestion.options) &&
+    currentQuestion.options.length > 0
+  );
+
+  const getQuestionTypeLabel = () => {
+    if (hasOptions) return 'Multiple Choice';
+    if (currentQuestion?.type === 'flashcard') return 'Flashcard Recall';
+    if (currentQuestion?.type === 'short_answer') return 'Short Answer';
+    if (currentQuestion?.type === 'fill_blank') return 'Fill In The Blank';
+    return 'Free Response';
+  };
+
   // Resolve Topic Name & Difficulty details
   const topicName = topics.find(t => t.id === currentQuestion?.topic_id)?.name;
   const difficulty = currentQuestion?.difficulty || 'medium';
@@ -58,7 +73,7 @@ export default function QuizRunner({
   };
 
   const handleSubmit = async () => {
-    const responseText = currentQuestion.type === 'short_answer' ? shortAnswerText.trim() : selectedOption;
+    const responseText = hasOptions ? selectedOption : shortAnswerText.trim();
     if (!responseText) return;
 
     try {
@@ -163,7 +178,7 @@ export default function QuizRunner({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
-              {currentQuestion.type === 'short_answer' ? 'Short Answer' : 'Multiple Choice'}
+              {getQuestionTypeLabel()}
             </span>
             {topicName && (
               <span
@@ -206,8 +221,8 @@ export default function QuizRunner({
           {currentQuestion.prompt}
         </h3>
 
-        {/* MCQ Mode Options */}
-        {currentQuestion.options && currentQuestion.options.length > 0 ? (
+        {/* MCQ Mode Options vs Written Response */}
+        {hasOptions ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.5rem' }}>
             {currentQuestion.options.map((opt, idx) => {
               const letter = String.fromCharCode(65 + idx);
@@ -271,13 +286,25 @@ export default function QuizRunner({
             })}
           </div>
         ) : (
-          /* Short Answer Mode */
+          /* Written / Flashcard / Short Answer Mode */
           <div style={{ marginBottom: '1.5rem' }}>
             <textarea
               className="form-textarea"
-              placeholder="Type your explanation or response based on your notes..."
+              placeholder={
+                currentQuestion?.type === 'flashcard'
+                  ? 'Type your explanation or recall key details from your notes...'
+                  : 'Type your explanation or response based on your notes...'
+              }
               value={shortAnswerText}
               onChange={(e) => setShortAnswerText(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                  e.preventDefault();
+                  if (shortAnswerText.trim() && !submitting && !evaluation) {
+                    handleSubmit();
+                  }
+                }
+              }}
               disabled={evaluation !== null}
               rows={4}
             />
@@ -291,7 +318,7 @@ export default function QuizRunner({
               variant="primary"
               onClick={handleSubmit}
               loading={submitting}
-              disabled={currentQuestion.type === 'short_answer' ? !shortAnswerText.trim() : !selectedOption}
+              disabled={hasOptions ? !selectedOption : !shortAnswerText.trim()}
               id="submit-answer-btn"
               style={{ borderRadius: 'var(--radius-full)', padding: '0.75rem 1.75rem' }}
             >
